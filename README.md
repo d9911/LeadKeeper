@@ -32,6 +32,253 @@
 - 📬 **Подтверждение пользователю** на email
 - 📋 **Служебная страница** `/admin` для просмотра заявок
 - 📱 **Адаптивный дизайн** (PostHog-inspired)
+- 📚 **Swagger UI** для тестирования API
+
+---
+
+## API Endpoints
+
+### Swagger UI
+
+Интерактивная документация API доступна по адресу:
+
+```
+http://localhost:8000/docs
+```
+
+### Endpoints
+
+| Method | Endpoint           | Описание                           | Параметры                 |
+| ------ | ------------------ | ---------------------------------- | ------------------------- |
+| `GET`  | `/api/health`      | Проверка работоспособности сервиса | —                         |
+| `POST` | `/api/leads`       | Создать новую заявку               | [LeadCreate](#leadcreate) |
+| `GET`  | `/api/leads`       | Получить список всех заявок        | —                         |
+| `GET`  | `/api/leads/{id}`  | Получить заявку по ID              | `id` (int)                |
+| `GET`  | `/api/leads/count` | Получить количество заявок         | —                         |
+
+---
+
+### GET /api/health
+
+Проверка здоровья сервиса.
+
+**Response:**
+
+```json
+{
+  "status": "ok",
+  "service": "leadkeeper"
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:8000/api/health
+```
+
+---
+
+### POST /api/leads
+
+Создать новую заявку.
+
+**Request Body (`LeadCreate`):**
+
+| Поле      | Тип     | Обязательно | Описание                                           |
+| --------- | ------- | ----------- | -------------------------------------------------- |
+| `name`    | string  | ✅          | Имя клиента (2-100 символов)                       |
+| `phone`   | string  | ⚠️          | Телефон (формат: `+КодСтраны Номер`, макс 16 цифр) |
+| `email`   | string  | ⚠️          | Email (RFC 5322)                                   |
+| `company` | string  | ❌          | Название компании                                  |
+| `comment` | string  | ❌          | Комментарий                                        |
+| `consent` | boolean | ✅          | Согласие на обработку данных                       |
+
+> ⚠️ Хотя бы одно из полей `phone` или `email` должно быть заполнено.
+
+**Validation Rules:**
+
+| Поле      | Правила                                                                                                            |
+| --------- | ------------------------------------------------------------------------------------------------------------------ |
+| `name`    | 2-100 символов, не пустой                                                                                          |
+| `phone`   | `+КодСтраны Номер` (пример: `+7 999 123-45-67`), макс 16 цифр, минимум 7 цифр                                      |
+| `email`   | RFC 5322: латинские буквы, цифры, `.` `-` `_` `!` `#` `$` `%` `&` `'` `*` `+` `/` `=` `?` `` ` `` `{` `\|` `}` `~` |
+| `consent` | Должен быть `true`                                                                                                 |
+
+**Success Response (200):**
+
+```json
+{
+  "id": 1,
+  "name": "Иван Петров",
+  "phone": "+7 999 123-45-67",
+  "email": null,
+  "company": "ТехноСофт",
+  "comment": "Хочу интеграцию",
+  "consent": true,
+  "created_at": "2026-06-02T20:39:48"
+}
+```
+
+**Error Response (400):**
+
+```json
+{
+  "detail": "At least one contact method (phone or email) is required"
+}
+```
+
+**Examples:**
+
+```bash
+# Создать заявку с телефоном
+curl -X POST http://localhost:8000/api/leads \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Иван Петров","phone":"+7 999 123-45-67","company":"ТехноСофт","consent":true}'
+
+# Создать заявку с email
+curl -X POST http://localhost:8000/api/leads \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Анна Смирнова","email":"anna@company.ru","comment":"Хочу интеграцию","consent":true}'
+
+# Создать заявку с обоими контактами
+curl -X POST http://localhost:8000/api/leads \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Олег Козлов","phone":"+44 20 7946 0958","email":"oleg@business.co.uk","company":"BizGroup","comment":"Test","consent":true}'
+```
+
+---
+
+### GET /api/leads
+
+Получить список всех заявок (новые первые).
+
+**Response (200):**
+
+```json
+[
+  {
+    "id": 3,
+    "name": "Олег Козлов",
+    "phone": "+44 20 7946 0958",
+    "email": "oleg@business.co.uk",
+    "company": "BizGroup",
+    "comment": "Test comment",
+    "consent": true,
+    "created_at": "2026-06-02T20:39:48"
+  },
+  {
+    "id": 2,
+    "name": "Анна Смирнова",
+    "phone": null,
+    "email": "anna@company.ru",
+    "company": null,
+    "comment": "Хочу интеграцию",
+    "consent": true,
+    "created_at": "2026-06-02T20:39:48"
+  }
+]
+```
+
+**Example:**
+
+```bash
+curl http://localhost:8000/api/leads
+```
+
+---
+
+### GET /api/leads/count
+
+Получить количество заявок.
+
+**Response (200):**
+
+```json
+{
+  "count": 3
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:8000/api/leads/count
+```
+
+---
+
+### GET /api/leads/{id}
+
+Получить одну заявку по ID.
+
+**Parameters:**
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `id` | integer | ID заявки |
+
+**Response (200):**
+
+```json
+{
+  "id": 1,
+  "name": "Иван Петров",
+  "phone": "+7 999 123-45-67",
+  "email": null,
+  "company": "ТехноСофт",
+  "comment": "Хочу интеграцию",
+  "consent": true,
+  "created_at": "2026-06-02T20:39:48"
+}
+```
+
+**Response (404):**
+
+```json
+{
+  "detail": "Lead not found"
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:8000/api/leads/1
+```
+
+---
+
+## Схема данных
+
+### LeadCreate
+
+```typescript
+interface LeadCreate {
+  name: string // required, 2-100 chars
+  phone?: string // optional, +CC NNN format
+  email?: string // optional, valid email format
+  company?: string // optional
+  comment?: string // optional
+  consent: boolean // required, must be true
+}
+```
+
+### LeadResponse
+
+```typescript
+interface LeadResponse {
+  id: number
+  name: string
+  phone: string | null
+  email: string | null
+  company: string | null
+  comment: string | null
+  consent: boolean
+  created_at: string // ISO 8601 datetime
+}
+```
+
+---
 
 ## Дизайн-система
 
@@ -50,6 +297,7 @@
 - **Backend**: Python + FastAPI + SQLAlchemy
 - **База данных**: SQLite
 - **Email**: SMTP (python-dotenv для настроек)
+- **API Docs**: Swagger UI (`/docs`), ReDoc (`/redoc`)
 
 ## Быстрый старт
 
@@ -85,10 +333,13 @@ npm run dev
 
 ### Откройте в браузере
 
-- **Форма заявки**: http://localhost:5173
-- **Просмотр заявок**: http://localhost:5173/admin
-- **API docs**: `http://localhost:8000/docs`
-- **API**: http://localhost:8000/api/health
+| Сервис              | URL                              |
+| ------------------- | -------------------------------- |
+| **Форма заявки**    | http://localhost:5173            |
+| **Просмотр заявок** | http://localhost:5173/admin      |
+| **API Health**      | http://localhost:8000/api/health |
+| **Swagger UI**      | http://localhost:8000/docs       |
+| **ReDoc**           | http://localhost:8000/redoc      |
 
 ---
 
@@ -109,7 +360,7 @@ OWNER_EMAIL=your@email.com
 # SMTP сервер 1 (основной)
 SMTP_HOST=smtp.mail.ru
 SMTP_USER=your@email.com
-SMTP_PASS=your_password
+SMTP_PASS=APP_PASSWORD  # Пароль приложения, не обычный пароль!
 SMTP_PORT=465
 SMTP_SECURE=true
 
@@ -123,6 +374,21 @@ SMTP_SECURE_2=false
 # Метод отправки: 0=выкл, 1=основной, 2=резервный
 SMTP_METHOD=1
 ```
+
+### Важно: Пароль приложения
+
+**Mail.ru** требует специальный "пароль приложения", а не обычный пароль от почты:
+
+1. Зайдите в настройки почты: https://mail.ru/settings/
+2. Перейдите в **Пароли для внешних приложений**
+3. Создайте новый пароль для приложения (например, "LeadKeeper")
+4. Скопируйте этот пароль в `SMTP_PASS`
+
+Для **Gmail**:
+
+1. https://myaccount.google.com/security
+2. "Пароли приложений" (нужно включить 2FA)
+3. Создайте пароль для "Другое"
 
 При новой заявке:
 
@@ -143,9 +409,9 @@ SMTP_METHOD=1
 ### Email
 
 - RFC 5322 compliant
-- Латинские буквы, цифры, `.` `-` `_` `!` `#` `$` `%` `&` `'` `*` `+` `/` `=` `?` `^` `` ` `` `{` `|` `}` `~`
+- Латинские буквы, цифры, `.` `-` `_` `!` `#` `$` `%` `&` `'` `*` `+` `/` `=` `?` `` ` `` `{` `|` `}` `~`
 - Нельзя: пробелы, кириллица, `< > ( ) [ ] \ , "`
-- Нельзя начинать/заканчивать точкой
+- Нельзя начинать/заканчиваться точкой
 - Нельзя две точки подряд
 
 ### Обязательные поля
@@ -167,6 +433,7 @@ SMTP_METHOD=1
 - [ ] После заполнения формы и отправки показывается сообщение об успехе
 - [ ] Заявка появляется на странице `/admin`
 - [ ] Таблица заявок отображает все поля корректно
+- [ ] Swagger UI доступен по адресу `/docs`
 
 ### Ручная проверка API
 
@@ -180,7 +447,6 @@ curl -X POST http://localhost:8000/api/leads \
   -d '{
     "name": "Иван Петров",
     "phone": "+7 999 123-45-67",
-    "email": "",
     "company": "ТехноСофт",
     "comment": "Хотим интегрировать форму",
     "consent": true
@@ -188,6 +454,9 @@ curl -X POST http://localhost:8000/api/leads \
 
 # Получить все заявки
 curl http://localhost:8000/api/leads
+
+# Получить количество заявок
+curl http://localhost:8000/api/leads/count
 ```
 
 ---
@@ -249,3 +518,7 @@ leadkeeper/
 ---
 
 **Время выполнения**: ~4 часа
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.

@@ -5,7 +5,6 @@ interface FormErrors {
   name?: string
   phone?: string
   email?: string
-  contact?: string
   consent?: string
   general?: string
 }
@@ -16,7 +15,6 @@ type FormState = 'idle' | 'loading' | 'success' | 'error'
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
 
 // Phone validation: + followed by country code and digits
-// Accepts formats like: +7 999 123-45-67, +44 20 7946 0958, +1 (555) 123-4567
 const PHONE_REGEX = /^\+?[1-9]\d{0,2}[\s\-]?\(?\d{1,4}\)?[\s\-\.]?\d{1,4}[\s\-\.]?\d{1,4}[\s\-\.]?\d{0,6}$/
 
 function validatePhone(phone: string): { valid: boolean; message?: string } {
@@ -24,24 +22,19 @@ function validatePhone(phone: string): { valid: boolean; message?: string } {
     return { valid: true } // Phone is optional
   }
 
-  // Remove all spaces for digit count
+  // Remove formatting characters
   const cleanPhone = phone.replace(/[\s\-\.\(\)]/g, '')
 
-  // Must have only digits and one +
-  const digitsOnly = cleanPhone.replace(/\D/g, '')
+  // Extract digits only
+  const digits = cleanPhone.replace(/\D/g, '')
 
-  // Check digit count
-  if (digitsOnly.length > 16) {
+  // Check digit count (max 16)
+  if (digits.length > 16) {
     return { valid: false, message: 'Номер слишком длинный (максимум 16 цифр)' }
   }
 
-  if (digitsOnly.length < 7) {
+  if (digits.length > 0 && digits.length < 7) {
     return { valid: false, message: 'Номер слишком короткий (минимум 7 цифр)' }
-  }
-
-  // Must start with + if international format
-  if (phone.includes('+') && !phone.startsWith('+')) {
-    return { valid: false, message: 'Знак + должен быть только в начале номера' }
   }
 
   if (!PHONE_REGEX.test(phone)) {
@@ -53,7 +46,7 @@ function validatePhone(phone: string): { valid: boolean; message?: string } {
 
 function validateEmail(email: string): { valid: boolean; message?: string } {
   if (!email.trim()) {
-    return { valid: true } // Email is optional if phone provided
+    return { valid: true } // Email is optional
   }
 
   // RFC 5322 compliant email validation
@@ -61,14 +54,16 @@ function validateEmail(email: string): { valid: boolean; message?: string } {
     return { valid: false, message: 'Некорректный формат email' }
   }
 
-  // Check for disallowed characters in local part
+  // Check local part rules
   const localPart = email.split('@')[0]
+
+  // No disallowed characters
   const disallowedChars = /[<>()\[\]\\,"\s]/
   if (disallowedChars.test(localPart)) {
     return { valid: false, message: 'Email содержит недопустимые символы' }
   }
 
-  // Local part cannot start or end with dot
+  // Cannot start or end with dot
   if (localPart.startsWith('.') || localPart.endsWith('.')) {
     return { valid: false, message: 'Email не может начинаться или заканчиваться точкой' }
   }
@@ -88,16 +83,13 @@ function formatPhone(value: string): string {
   // Ensure only one +
   const plusCount = (cleaned.match(/\+/g) || []).length
   if (plusCount > 1) {
-    // Keep only the first +
     cleaned = '+' + cleaned.replace(/\+/g, '')
   }
 
-  // Limit total digits to 16 (excluding +)
+  // Limit total digits to 16
   const digits = cleaned.replace(/\D/g, '')
   if (digits.length > 16) {
-    // Trim excess digits
     const trimmedDigits = digits.substring(0, 16)
-    // Reconstruct with the original format
     cleaned = '+' + trimmedDigits
   }
 
@@ -129,21 +121,26 @@ export function LeadForm() {
       newErrors.name = 'Имя слишком длинное'
     }
 
-    // Phone validation
-    const phoneResult = validatePhone(formData.phone)
-    if (!phoneResult.valid) {
-      newErrors.phone = phoneResult.message
+    // Phone validation (only if filled)
+    if (formData.phone.trim()) {
+      const phoneResult = validatePhone(formData.phone)
+      if (!phoneResult.valid) {
+        newErrors.phone = phoneResult.message
+      }
     }
 
-    // Email validation
-    const emailResult = validateEmail(formData.email)
-    if (!emailResult.valid) {
-      newErrors.email = emailResult.message
+    // Email validation (only if filled)
+    if (formData.email.trim()) {
+      const emailResult = validateEmail(formData.email)
+      if (!emailResult.valid) {
+        newErrors.email = emailResult.message
+      }
     }
 
     // At least one contact method required
     if (!formData.phone.trim() && !formData.email.trim()) {
-      newErrors.contact = 'Укажите телефон или email для связи'
+      newErrors.phone = 'Укажите телефон или email для связи'
+      newErrors.email = 'Укажите телефон или email для связи'
     }
 
     // Consent validation
@@ -189,15 +186,30 @@ export function LeadForm() {
 
     setFormData((prev) => ({ ...prev, [field]: value }))
 
-    // Clear error when user starts typing
-    const errorKey = field === 'phone' || field === 'email' ? field : field
-    if (errors[errorKey as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [errorKey]: undefined }))
+    // Clear field-specific error on change
+    if (field === 'phone' && errors.phone) {
+      // Don't clear if it's the "at least one contact" error
+      if (!formData.email.trim()) {
+        // Keep error until other contact is filled
+      }
     }
-    // Clear contact error if either field changes
-    if (field === 'phone' || field === 'email') {
-      if (errors.contact) {
-        setErrors((prev) => ({ ...prev, contact: undefined }))
+    if (field === 'email' && errors.email) {
+      // Don't clear if it's the "at least one contact" error
+    }
+  }
+
+  // Handle blur - validate individual field when user leaves it
+  const handleBlur = (field: keyof LeadFormData) => () => {
+    if (field === 'phone' && formData.phone.trim()) {
+      const result = validatePhone(formData.phone)
+      if (!result.valid) {
+        setErrors((prev) => ({ ...prev, phone: result.message }))
+      }
+    }
+    if (field === 'email' && formData.email.trim()) {
+      const result = validateEmail(formData.email)
+      if (!result.valid) {
+        setErrors((prev) => ({ ...prev, email: result.message }))
       }
     }
   }
@@ -225,12 +237,6 @@ export function LeadForm() {
     <div className="card">
       {formState === 'error' && errors.general && <div className="alert alert-error">{errors.general}</div>}
 
-      {errors.contact && (
-        <div className="alert alert-error" style={{ marginBottom: '16px' }}>
-          {errors.contact}
-        </div>
-      )}
-
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="name">
@@ -241,32 +247,34 @@ export function LeadForm() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="phone">Телефон</label>
+          <label htmlFor="phone">Телефон {!formData.email.trim() && <span className="required">*</span>}</label>
           <input
             type="tel"
             id="phone"
             value={formData.phone}
             onChange={handleChange('phone')}
+            onBlur={handleBlur('phone')}
             className={errors.phone ? 'error' : ''}
             placeholder="+7 999 123-45-67"
             disabled={formState === 'loading'}
           />
-          <div className="field-hint">Формат: +КодСтраны Номер (максимум 16 цифр)</div>
+          {formData.phone && <div className="field-hint">Формат: +КодСтраны Номер (макс 16 цифр)</div>}
           {errors.phone && <div className="error-message">{errors.phone}</div>}
         </div>
 
         <div className="form-group">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">Email {!formData.phone.trim() && <span className="required">*</span>}</label>
           <input
             type="email"
             id="email"
             value={formData.email}
             onChange={handleChange('email')}
+            onBlur={handleBlur('email')}
             className={errors.email ? 'error' : ''}
             placeholder="ivan@company.com"
             disabled={formState === 'loading'}
           />
-          <div className="field-hint">Латинские буквы, цифры, точки, дефис, @</div>
+          {formData.email && <div className="field-hint">Латинские буквы, цифры, точки, дефис, @</div>}
           {errors.email && <div className="error-message">{errors.email}</div>}
         </div>
 
