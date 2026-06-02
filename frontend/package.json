@@ -1,8 +1,13 @@
 {
-  "name": "leadkeeper-frontend",
+  "name": "leadkeeper",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
+  "description": "Lead capture module for client websites",
+  "author": {
+    "name": "Denis Gutsuliak",
+    "email": "admin@d9911.org",
+    "url": "https://t.me/d9911/"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
