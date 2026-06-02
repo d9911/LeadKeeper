@@ -1,0 +1,52 @@
+node_modules/
+*/node_modules/
+dist/
+build/
+*/dist/
+package-lock.json
+*/package-lock.json
+yarn.lock
+*/yarn.lock
+dist/
+coverage/
+.DS_Store
+*.log
+*.log
+.DS_Store
+.claude/
+CLAUDE.md
+coverage/
+*/output.txt
+output.txt
+preferences.db
+
+DESIGN.md
+# Environment / secrets
+.env
+*.env.local
+!.env.example
+
+superset-src/
+superset-frontend/
+
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.mypy_cache/
+
+# Docker
+*.tar
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
