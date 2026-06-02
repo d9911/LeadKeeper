@@ -1,34 +1,33 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { getLeads, Lead } from '../api/leads';
-import { LeadsTable } from '../components/LeadsTable';
+import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { getLeads, Lead } from '../api/leads'
+import { LeadsTable } from '../components/LeadsTable'
 
 export function AdminPage() {
-  const location = useLocation();
-  const isActive = location.pathname === '/admin';
+  const location = useLocation()
 
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [leads, setLeads] = useState<Lead[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    loadLeads();
-  }, []);
+    loadLeads()
+  }, [])
 
   const loadLeads = async () => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
 
-    const result = await getLeads();
+    const result = await getLeads()
 
     if (result.error) {
-      setError(result.error);
+      setError(result.error)
     } else if (result.data) {
-      setLeads(result.data);
+      setLeads(result.data)
     }
 
-    setIsLoading(false);
-  };
+    setIsLoading(false)
+  }
 
   return (
     <div className="container">
@@ -36,31 +35,32 @@ export function AdminPage() {
         <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
           📝 Оставить заявку
         </Link>
-        <Link to="/admin" className={`nav-link ${isActive ? 'active' : ''}`}>
+        <Link to="/admin" className={`nav-link ${location.pathname === '/admin' ? 'active' : ''}`}>
           📋 Заявки
         </Link>
       </nav>
 
-      <div className="admin-header">
-        <div>
-          <h1>Заявки</h1>
-          <p className="subtitle">Служебная страница для просмотра поступивших заявок</p>
+      <div className="page-section">
+        <div className="admin-header">
+          <div>
+            <h1>Заявки</h1>
+            <p className="subtitle">Служебная страница для просмотра поступивших заявок</p>
+          </div>
+          <span className="badge">{leads.length} заявок</span>
         </div>
-        <span className="badge">{leads.length} заявок</span>
-      </div>
 
-      <div className="card">
-        <LeadsTable leads={leads} isLoading={isLoading} error={error} />
-      </div>
+        <div className="card">
+          <LeadsTable leads={leads} isLoading={isLoading} error={error} />
+        </div>
 
-      {!isLoading && !error && leads.length > 0 && (
-        <button 
-          onClick={loadLeads} 
-          style={{ marginTop: '1rem', background: 'transparent', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
-        >
-          🔄 Обновить список
-        </button>
-      )}
+        {!isLoading && !error && leads.length > 0 && (
+          <div style={{ marginTop: '16px', textAlign: 'center' }}>
+            <button className="btn btn-secondary" onClick={loadLeads} style={{ width: 'auto', display: 'inline-flex' }}>
+              🔄 Обновить список
+            </button>
+          </div>
+        )}
+      </div>
     </div>
-  );
+  )
 }

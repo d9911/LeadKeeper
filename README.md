@@ -5,11 +5,6 @@
 
 ---
 
-- Lead form: `http://localhost:5173/`
-- Admin page: `http://localhost:5173/admin`
-- API docs: `http://localhost:8000/docs`
-- Healthcheck: `http://localhost:8000/api/health`
-
 <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 20px; width: 100%; margin: 24px 0;">
   <div style="flex: 2; text-align: center;">
     <img src="./screenshots/1389.jpg" alt="desktop preview" sstyle="width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);" />
@@ -21,6 +16,10 @@
   </div>
 </div>
 
+**Дизайн**: PostHog-inspired — тёплый кремовый фон, минималистичный стиль, жёлто-оранжевый акцент.
+
+---
+
 ## Возможности
 
 - 📝 Форма заявки с полями: имя, контакт (email/телефон), компания, комментарий
@@ -28,6 +27,19 @@
 - 💾 Сохранение заявок в SQLite
 - 📋 Служебная страница для просмотра заявок
 - 📱 Адаптивный дизайн
+
+## Дизайн-система
+
+Вдохновлён стилем PostHog:
+
+| Элемент        | Значение                            |
+| -------------- | ----------------------------------- |
+| Фон            | `#eeefe9` — тёплый кремовый         |
+| Карточки       | `#ffffff` — белый с тонкой границей |
+| Акцент         | `#f7a501` — жёлто-оранжевый (CTA)   |
+| Текст          | `#23251d` — глубокий олив-чаркоал   |
+| Радиусы        | 4–8px для карточек и кнопок         |
+| Без градиентов | Чистый минималистичный стиль        |
 
 ## Стек
 
@@ -62,7 +74,10 @@ npm install
 make dev
 ```
 
-
+- Lead form: `http://localhost:5173/`
+- Admin page: `http://localhost:5173/admin`
+- API docs: `http://localhost:8000/docs`
+- Healthcheck: `http://localhost:8000/api/health`
 
 ## Чек-лист проверки
 
@@ -128,12 +143,14 @@ leadkeeper/
 │   │   │   ├── LeadPage.tsx
 │   │   │   └── AdminPage.tsx
 │   │   ├── App.tsx
-│   │   └── main.tsx
+│   │   ├── main.tsx
+│   │   └── index.css    # PostHog-inspired design system
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.ts
 ├── Makefile
 ├── README.md
+├── REPORT.md
 └── screenshots/
 ```
 
@@ -141,8 +158,9 @@ leadkeeper/
 
 - Планирование структуры проекта
 - Генерация boilerplate кода
+- Настройка PostHog-inspired дизайн-системы
 - Проверка README на полноту
 
 ---
 
-**Время выполнения**: ~3 часа
+**Время выполнения**: ~3.5 часа
