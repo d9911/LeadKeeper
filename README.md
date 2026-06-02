@@ -5,14 +5,18 @@
 
 ---
 
-<div style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 20px; width: 100%; margin: 24px 0;">
   <div style="flex: 2; text-align: center;">
-    <img src="./screenshots/1389.jpg" alt="desktop preview" sstyle="width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);" />
+    <img src="./screenshots/1350.jpg" alt="desktop preview" style="width: 50%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);" />
     <p><strong>Desktop</strong></p>
   </div>
+<div style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 20px; width: 100%; margin: 24px 0;">
   <div style="flex: 1; text-align: center;">
-    <img src="./screenshots/428.jpg" alt="mobile preview" style="width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);" />
+    <img src="./screenshots/440.jpg" alt="mobile preview" style="width: 50%;  border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);" />
     <p><strong>Mobile</strong></p>
+  </div>
+  <div style="flex: 1; text-align: center;">
+    <img src="./screenshots/505.jpg" alt="mobile preview" style="width: 50%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);" />
+    <p><strong>List</strong></p>
   </div>
 </div>
 
