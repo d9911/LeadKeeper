@@ -59,7 +59,8 @@ export function LeadsTable({ leads, isLoading, error }: LeadsTableProps) {
           <tr>
             <th>Дата</th>
             <th>Имя</th>
-            <th>Контакт</th>
+            <th>Телефон</th>
+            <th>Email</th>
             <th>Компания</th>
             <th>Комментарий</th>
           </tr>
@@ -71,7 +72,8 @@ export function LeadsTable({ leads, isLoading, error }: LeadsTableProps) {
               <td>
                 <strong>{lead.name}</strong>
               </td>
-              <td>{lead.contact}</td>
+              <td>{lead.phone || '—'}</td>
+              <td>{lead.email || '—'}</td>
               <td>{truncateText(lead.company)}</td>
               <td>{truncateText(lead.comment)}</td>
             </tr>

@@ -206,6 +206,13 @@ h2 {
   font-weight: 500;
 }
 
+.field-hint {
+  color: var(--color-mute);
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 400;
+}
+
 /* Checkbox */
 .checkbox-group {
   display: flex;

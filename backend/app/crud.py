@@ -5,7 +5,9 @@ from sqlalchemy.orm import Session
 from .models import Lead
 from .schemas import LeadCreate
 from .database import SessionLocal
-import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_db():
@@ -17,36 +19,18 @@ def get_db():
         pass
 
 
-def validate_contact(contact: str) -> bool:
-    """
-    Validate contact field - should be email or phone
-    Basic validation: contains @ for email or digits for phone
-    """
-    if not contact:
-        return False
-    
-    # Check if it looks like email
-    if '@' in contact and '.' in contact:
-        return True
-    
-    # Check if it contains digits (phone)
-    if any(c.isdigit() for c in contact):
-        return True
-    
-    return False
-
-
 def create_lead(lead_data: LeadCreate) -> Lead:
     """Create a new lead in the database"""
-    # Validate contact format
-    if not validate_contact(lead_data.contact):
-        raise ValueError("Contact should be a valid email or phone number")
+    # Validate that at least one contact method is provided
+    if not lead_data.phone.strip() and not lead_data.email.strip():
+        raise ValueError("At least one contact method (phone or email) is required")
     
     db = SessionLocal()
     try:
         db_lead = Lead(
             name=lead_data.name,
-            contact=lead_data.contact,
+            phone=lead_data.phone if lead_data.phone else None,
+            email=lead_data.email if lead_data.email else None,
             company=lead_data.company,
             comment=lead_data.comment,
             consent=lead_data.consent
@@ -54,9 +38,11 @@ def create_lead(lead_data: LeadCreate) -> Lead:
         db.add(db_lead)
         db.commit()
         db.refresh(db_lead)
+        logger.info(f"Lead created: {db_lead.id} - {db_lead.name}")
         return db_lead
     except Exception as e:
         db.rollback()
+        logger.error(f"Error creating lead: {e}")
         raise e
     finally:
         db.close()

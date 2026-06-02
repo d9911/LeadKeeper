@@ -3,7 +3,8 @@ const API_BASE = '/api';
 export interface Lead {
   id: number;
   name: string;
-  contact: string;
+  phone: string | null;
+  email: string | null;
   company: string | null;
   comment: string | null;
   consent: boolean;
@@ -12,7 +13,8 @@ export interface Lead {
 
 export interface LeadFormData {
   name: string;
-  contact: string;
+  phone: string;
+  email: string;
   company?: string;
   comment?: string;
   consent: boolean;

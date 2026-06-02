@@ -12,11 +12,17 @@ class Lead(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
-    contact = Column(String(255), nullable=False)  # email or phone
+    phone = Column(String(50), nullable=True)
+    email = Column(String(255), nullable=True)
     company = Column(String(255), nullable=True)
     comment = Column(Text, nullable=True)
     consent = Column(Boolean, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):
-        return f"<Lead(id={self.id}, name='{self.name}', contact='{self.contact}')>"
+        return f"<Lead(id={self.id}, name='{self.name}', phone='{self.phone}', email='{self.email}')>"
+
+    @property
+    def contact(self):
+        """Legacy property for backwards compatibility"""
+        return self.phone or self.email or ''
