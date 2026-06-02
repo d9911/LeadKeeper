@@ -5,18 +5,24 @@
 
 ---
 
-  <div style="flex: 2; text-align: center;">
-    <img src="./screenshots/1350.jpg" alt="desktop preview" style="width: 50%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);" />
-    <p><strong>Desktop</strong></p>
+## Скриншоты
+
+<div style="display: flex; flex-direction: column; gap: 24px; margin: 24px 0; align-items: center;">
+  <!-- Desktop - большой скриншот -->
+  <div style="text-align: center; width: 100%;">
+    <img src="./screenshots/1350.jpg" alt="Desktop preview" style="width: 65%; max-width: 900px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 12px 40px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.06);" />
+    <p style="margin-top: 12px; font-size: 13px; color: #6c6e63; font-weight: 600;">Desktop</p>
   </div>
-<div style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 20px; width: 100%; margin: 24px 0;">
-  <div style="flex: 1; text-align: center;">
-    <img src="./screenshots/440.jpg" alt="mobile preview" style="width: 50%;  border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);" />
-    <p><strong>Mobile</strong></p>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="./screenshots/505.jpg" alt="mobile preview" style="width: 50%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08);" />
-    <p><strong>List</strong></p>
+  <!-- Mobile и List - два маленьких -->
+  <div style="display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;">
+    <div style="text-align: center; flex: 0 0 auto;">
+      <img src="./screenshots/440.jpg" alt="Mobile preview" style="width: 280px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.06);" />
+      <p style="margin-top: 10px; font-size: 12px; color: #6c6e63; font-weight: 600;">Mobile</p>
+    </div>
+    <div style="text-align: center; flex: 0 0 auto;">
+      <img src="./screenshots/505.jpg" alt="List preview" style="width: 280px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.06);" />
+      <p style="margin-top: 10px; font-size: 12px; color: #6c6e63; font-weight: 600;">List</p>
+    </div>
   </div>
 </div>
 
@@ -309,9 +315,32 @@ interface LeadResponse {
 
 ```bash
 cd leadkeeper
-make install   # Установить зависимости
-make dev       # Запустить frontend + backend
+# Установка
+make install              # Все зависимости
+make install-backend      # Только backend
+make install-frontend     # Только frontend
+
+# Разработка
+make dev                  # Frontend + Backend
+make backend              # Только backend
+make frontend             # Только frontend
+
+# Сборка (SSG)
+make build                # Полная сборка
+make build-frontend       # Собрать только frontend
+make build-backend        # Проверить backend
+
+# Preview
+make preview              # Preview собранного
+make preview-full         # Preview + Backend
+
+# Очистка
+make clean                # Кэш
+make clean-all            # Все (включая зависимости)
 ```
+
+всё работает в одной команде если стоит node 20 и python3.12
+`make i`
 
 ### Windows
 
@@ -319,6 +348,8 @@ make dev       # Запустить frontend + backend
 cd leadkeeper
 make.bat install   # Установить зависимости
 make.bat dev       # Запустить frontend + backend
+make.bat build
+make.bat preview-full
 ```
 
 Или напрямую:
