@@ -19,6 +19,11 @@ BACKEND_PORT = 8000
 FRONTEND_PORT = 5173
 PREVIEW_PORT = 4173
 
+# Docker
+DOCKER_NAME = leadkeeper-app
+DOCKER_VOLUME = leadkeeper-data
+COMPOSE_FILE = docker-compose.yml
+
 # URLs
 BACKEND_URL = http://localhost:$(BACKEND_PORT)
 FRONTEND_URL = http://localhost:$(FRONTEND_PORT)
@@ -54,6 +59,14 @@ help: ## Показать справку
 	@echo "  $(GREEN)make build-backend$(NC)  Собрать только backend"
 	@echo "  $(GREEN)make preview$(NC)        Preview собранного frontend"
 	@echo "  $(GREEN)make preview-full$(NC)   Preview frontend + запуск backend"
+	@echo ""
+	@echo "$(BOLD)🐳 Docker команды:$(NC)"
+	@echo "  $(GREEN)make docker-build$(NC)    Собрать Docker образ"
+	@echo "  $(GREEN)make docker-up$(NC)       Запустить контейнер (detached)"
+	@echo "  $(GREEN)make docker-down$(NC)     Остановить контейнер"
+	@echo "  $(GREEN)make docker-logs$(NC)     Показать логи контейнера"
+	@echo "  $(GREEN)make docker-shell$(NC)    Войти в контейнер (shell)"
+	@echo "  $(GREEN)make docker-clean$(NC)    Удалить контейнер и образ"
 	@echo ""
 	@echo "$(BOLD)🧹 Очистка:$(NC)"
 	@echo "  $(GREEN)make clean$(NC)          Очистить кэш и временные файлы"
@@ -195,7 +208,7 @@ preview: clean-ports ## Preview собранного frontend
 	@$(MAKE) open-preview &
 	@cd $(FRONTEND_DIR) && npm run preview
 
-preview-full: clean-ports build ## Preview frontend + запуск backend !!!!!!!!!!!!!!!!
+preview-full: clean-ports build ## Preview frontend + запуск backend  !!!!!!!!!!!!!!!!
 	@echo ""
 	@echo "$(BLUE)🚀 Full Preview Mode$(NC)"
 	@echo "$(YELLOW)Frontend:$(NC) $(PREVIEW_URL)"
@@ -207,6 +220,65 @@ preview-full: clean-ports build ## Preview frontend + запуск backend !!!!!
 
 # всё работает в одной команде если стоит node 20 и python3.12
 i: install preview-full
+# =========================
+# Docker Commands
+# =========================
+
+docker-build: ## Собрать Docker образ
+	@echo ""
+	@echo "$(BLUE)🐳 Собираем Docker образ...$(NC)"
+	@docker-compose -f $(COMPOSE_FILE) build --no-cache
+	@echo ""
+	@echo "$(GREEN)✅ Docker образ собран!$(NC)"
+	@echo "Запустите: $(YELLOW)make docker-up$(NC)"
+
+docker-up: ## Запустить контейнер (detached mode)
+	@echo ""
+	@echo "$(BLUE)🐳 Запускаем контейнер...$(NC)"
+	@docker-compose -f $(COMPOSE_FILE) up -d
+	@echo ""
+	@echo "$(GREEN)✅ Контейнер запущен!$(NC)"
+	@echo "$(YELLOW)Backend:$(NC)  $(BACKEND_URL)"
+	@echo "$(YELLOW)Swagger:$(NC)  $(API_DOCS_URL)"
+	@echo ""
+	@echo "Логи: $(YELLOW)make docker-logs$(NC)"
+	@echo "Остановить: $(YELLOW)make docker-down$(NC)"
+
+docker-down: ## Остановить контейнер
+	@echo ""
+	@echo "$(YELLOW)🐳 Останавливаем контейнер...$(NC)"
+	@docker-compose -f $(COMPOSE_FILE) down
+	@echo "$(GREEN)✅ Контейнер остановлен$(NC)"
+
+docker-logs: ## Показать логи контейнера (follow mode)
+	@echo ""
+	@echo "$(BLUE)📋 Логи контейнера (Ctrl+C для выхода):$(NC)"
+	@docker-compose -f $(COMPOSE_FILE) logs -f
+
+docker-shell: ## Войти в контейнер (shell)
+	@echo ""
+	@echo "$(BLUE)🐚 Вход в контейнер...$(NC)"
+	@echo "$(YELLOW)Для выхода: exit$(NC)"
+	@docker exec -it $(DOCKER_NAME) /bin/sh
+
+docker-restart: docker-down docker-up ## Перезапустить контейнер
+
+docker-status: ## Показать статус контейнеров
+	@docker-compose -f $(COMPOSE_FILE) ps
+
+docker-clean: ## Удалить контейнер и образ
+	@echo ""
+	@echo "$(YELLOW)🧹 Удаляем Docker образ и контейнер...$(NC)"
+	@docker-compose -f $(COMPOSE_FILE) down --rmi local --volumes 2>/dev/null || true
+	@docker rmi leadkeeper-app 2>/dev/null || true
+	@echo "$(GREEN)✅ Docker очищен!$(NC)"
+
+docker-prune: ## Очистить неиспользуемые Docker ресурсы
+	@echo ""
+	@echo "$(YELLOW)🧹 Очищаем неиспользуемые Docker ресурсы...$(NC)"
+	@docker system prune -f
+	@echo "$(GREEN)✅ Docker ресурсы очищены!$(NC)"
+
 # =========================
 # Cleanup
 # =========================

@@ -1,0 +1,68 @@
+# ============================================
+# LeadKeeper - Docker Compose Configuration
+# ============================================
+
+services:
+  # ---- LeadKeeper App ----
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: leadkeeper-app
+
+    # Перезапуск при краше или при старте системы
+    restart: unless-stopped
+
+    # Порт наружу
+    ports:
+      - "8000:8000"
+
+    # Переменные окружения из .env файла
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      # SMTP настройки можно добавить через .env
+      # OWNER_EMAIL=${OWNER_EMAIL}
+      # SMTP_HOST=${SMTP_HOST}
+      # SMTP_USER=${SMTP_USER}
+      # SMTP_PASS=${SMTP_PASS}
+      # SMTP_PORT=${SMTP_PORT}
+      # SMTP_SECURE=${SMTP_SECURE}
+      # SMTP_METHOD=${SMTP_METHOD}
+
+    # Volumes для персистентности данных
+    volumes:
+      # Сохраняем базу данных между перезапусками
+      - leadkeeper-data:/app/data
+      # Опционально: можно монтировать .env файл
+      # - ./backend/.env:/app/.env:ro
+
+    # Healthcheck настроен в Dockerfile, дублируем для Compose
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    # Ресурсы (опционально)
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+# ---- Volumes ----
+volumes:
+  # Именованный volume для данных (сохраняется между перезапусками)
+  leadkeeper-data:
+    driver: local
+
+# ---- Networks ----
+networks:
+  default:
+    name: leadkeeper-network
+    driver: bridge

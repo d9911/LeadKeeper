@@ -315,30 +315,9 @@ interface LeadResponse {
 
 ```bash
 cd leadkeeper
-# Установка
-make install              # Все зависимости
-make install-backend      # Только backend
-make install-frontend     # Только frontend
-
-# Разработка
-make dev                  # Frontend + Backend
-make backend              # Только backend
-make frontend             # Только frontend
-
-# Сборка (SSG)
-make build                # Полная сборка
-make build-frontend       # Собрать только frontend
-make build-backend        # Проверить backend
-
-# Preview
-make preview              # Preview собранного
-make preview-full         # Preview + Backend
-
-# Очистка
-make clean                # Кэш
-make clean-all            # Все (включая зависимости)
+make install   # Установить зависимости
+make dev       # Запустить frontend + backend
 ```
-
 всё работает в одной команде если стоит node 20 и python3.12
 `make i`
 
@@ -348,8 +327,6 @@ make clean-all            # Все (включая зависимости)
 cd leadkeeper
 make.bat install   # Установить зависимости
 make.bat dev       # Запустить frontend + backend
-make.bat build
-make.bat preview-full
 ```
 
 Или напрямую:
@@ -552,8 +529,58 @@ leadkeeper/
 
 ---
 
-**Время выполнения**: ~4 часа
+## Docker Deployment
 
+### Быстрый старт
+
+```bash
+# 1. Собрать образ
+make docker-build
+
+# 2. Запустить контейнер
+make docker-up
+
+# 3. Открыть в браузере
+open http://localhost:8000
+```
+
+### Команды Docker
+
+| Команда              | Описание                          |
+| -------------------- | --------------------------------- |
+| `make docker-build`  | Собрать Docker образ              |
+| `make docker-up`     | Запустить контейнер (detached)    |
+| `make docker-down`   | Остановить контейнер              |
+| `make docker-logs`   | Показать логи (Ctrl+C для выхода) |
+| `make docker-shell`  | Войти в контейнер                 |
+| `make docker-status` | Статус контейнеров                |
+| `make docker-clean`  | Удалить контейнер и образ         |
+
+### Переменные окружения
+
+Для настройки email создайте файл `.env`:
+
+```bash
+cp .env.docker.example .env
+# Отредактируйте .env с вашими SMTP настройками
+```
+
+Docker Compose автоматически загрузит переменные из `.env`.
+
+### Volumes
+
+Данные сохраняются в именованном volume `leadkeeper-data`:
+
+- SQLite база данных
+- Все заявки между перезапусками
+
+### Healthcheck
+
+Контейнер проверяет каждые 30 секунд доступность `/api/health`.
+
+---
+
+**Время выполнения**: ~3 часа
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
