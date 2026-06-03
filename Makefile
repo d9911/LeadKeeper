@@ -4,36 +4,34 @@
 # LeadKeeper Makefile
 # =========================
 
-# Directories
 BACKEND_DIR = backend
 FRONTEND_DIR = frontend
 
-# Python settings
 PYTHON ?= python3.12
 VENV = $(BACKEND_DIR)/.venv
 PIP = $(VENV)/bin/pip
 UVICORN = $(VENV)/bin/uvicorn
 
-# Ports
 BACKEND_PORT = 8000
 FRONTEND_PORT = 5173
 PREVIEW_PORT = 4173
+DOCKER_FRONTEND_PORT = 5175
 
-# Docker
-DOCKER_NAME = leadkeeper-app
-DOCKER_VOLUME = leadkeeper-data
-COMPOSE_FILE = docker-compose.yml
 
-# URLs
 BACKEND_URL = http://localhost:$(BACKEND_PORT)
 FRONTEND_URL = http://localhost:$(FRONTEND_PORT)
 PREVIEW_URL = http://localhost:$(PREVIEW_PORT)
+DOCKER_URL = http://localhost:$(DOCKER_FRONTEND_PORT)
 API_DOCS_URL = http://localhost:$(BACKEND_PORT)/docs
+DOCKER_DOCS_URL = http://localhost:$(DOCKER_FRONTEND_PORT)/docs
 
-# Build output
+# Docker
+DOCKER_NAME_BACKEND = leadkeeper-backend
+DOCKER_NAME_FRONTEND = leadkeeper-frontend
+COMPOSE_FILE = docker-compose.yml
+
 DIST_DIR = $(FRONTEND_DIR)/dist
 
-# Colors
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
 BLUE := \033[0;34m
@@ -41,6 +39,7 @@ CYAN := \033[0;36m
 RED := \033[0;31m
 BOLD := \033[1m
 NC := \033[0m
+
 
 help: ## Показать справку
 	@echo ""
@@ -65,6 +64,8 @@ help: ## Показать справку
 	@echo "  $(GREEN)make docker-up$(NC)       Запустить контейнер (detached)"
 	@echo "  $(GREEN)make docker-down$(NC)     Остановить контейнер"
 	@echo "  $(GREEN)make docker-logs$(NC)     Показать логи контейнера"
+	@echo "  $(GREEN)make docker-shell-be$(NC) Shell в backend"
+	@echo "  $(GREEN)make docker-shell-fe$(NC) Shell в frontend"
 	@echo "  $(GREEN)make docker-shell$(NC)    Войти в контейнер (shell)"
 	@echo "  $(GREEN)make docker-clean$(NC)    Удалить контейнер и образ"
 	@echo ""
@@ -79,9 +80,6 @@ help: ## Показать справку
 	@echo "  $(YELLOW)Swagger:$(NC)   $(API_DOCS_URL)"
 	@echo ""
 
-# =========================
-# Installation
-# =========================
 
 install: install-backend install-frontend ## Установить все зависимости
 	@echo ""
@@ -105,9 +103,7 @@ install-frontend: check-node ## Установить frontend зависимос
 	@cd $(FRONTEND_DIR) && npm install
 	@echo "$(GREEN)✅ Frontend готов!$(NC)"
 
-# =========================
-# Development
-# =========================
+
 
 check-python:
 	@$(PYTHON) --version | grep -q "Python 3.1[0-9]" || \
@@ -218,13 +214,13 @@ preview-full: clean-ports build ## Preview frontend + запуск backend  !!!!
 	@cd $(FRONTEND_DIR) && npm run preview &
 	@cd $(BACKEND_DIR) && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $(BACKEND_PORT)
 
-# всё работает в одной команде если стоит node 20 и python3.12
-i: install preview-full
+
+
 # =========================
 # Docker Commands
 # =========================
 
-docker-build: ## Собрать Docker образ
+docker-build: build-frontend
 	@echo ""
 	@echo "$(BLUE)🐳 Собираем Docker образ...$(NC)"
 	@docker-compose -f $(COMPOSE_FILE) build --no-cache
@@ -240,13 +236,14 @@ docker-up: ## Запустить контейнер (detached mode)
 	@echo "$(GREEN)✅ Контейнер запущен!$(NC)"
 	@echo "$(YELLOW)Backend:$(NC)  $(BACKEND_URL)"
 	@echo "$(YELLOW)Swagger:$(NC)  $(API_DOCS_URL)"
+	@echo "$(YELLOW)Frontend:$(NC)  $(DOCKER_URL)"
 	@echo ""
 	@echo "Логи: $(YELLOW)make docker-logs$(NC)"
 	@echo "Остановить: $(YELLOW)make docker-down$(NC)"
 
 docker-down: ## Остановить контейнер
 	@echo ""
-	@echo "$(YELLOW)🐳 Останавливаем контейнер...$(NC)"
+	@echo "$(YELLOW)🛑🐳 Останавливаем контейнер...$(NC)"
 	@docker-compose -f $(COMPOSE_FILE) down
 	@echo "$(GREEN)✅ Контейнер остановлен$(NC)"
 
@@ -261,6 +258,13 @@ docker-shell: ## Войти в контейнер (shell)
 	@echo "$(YELLOW)Для выхода: exit$(NC)"
 	@docker exec -it $(DOCKER_NAME) /bin/sh
 
+
+docker-shell-be:
+	@docker exec -it $(DOCKER_NAME_BACKEND) /bin/sh
+
+docker-shell-fe:
+	@docker exec -it $(DOCKER_NAME_FRONTEND) /bin/sh
+
 docker-restart: docker-down docker-up ## Перезапустить контейнер
 
 docker-status: ## Показать статус контейнеров
@@ -270,7 +274,6 @@ docker-clean: ## Удалить контейнер и образ
 	@echo ""
 	@echo "$(YELLOW)🧹 Удаляем Docker образ и контейнер...$(NC)"
 	@docker-compose -f $(COMPOSE_FILE) down --rmi local --volumes 2>/dev/null || true
-	@docker rmi leadkeeper-app 2>/dev/null || true
 	@echo "$(GREEN)✅ Docker очищен!$(NC)"
 
 docker-prune: ## Очистить неиспользуемые Docker ресурсы
@@ -278,7 +281,6 @@ docker-prune: ## Очистить неиспользуемые Docker ресур
 	@echo "$(YELLOW)🧹 Очищаем неиспользуемые Docker ресурсы...$(NC)"
 	@docker system prune -f
 	@echo "$(GREEN)✅ Docker ресурсы очищены!$(NC)"
-
 # =========================
 # Cleanup
 # =========================
@@ -294,7 +296,7 @@ clean: ## Очистить кэш и временные файлы
 	@rm -rf $(FRONTEND_DIR)/dist
 	@echo "$(GREEN)✅ Кэш очищен$(NC)"
 
-clean-all: clean-ports clean ## Полная очистка (включая зависимости)
+clean-all: clean docker-clean ## Полная очистка (включая зависимости)
 	@echo ""
 	@echo "$(YELLOW)🧹 Полная очистка...$(NC)"
 	@rm -rf $(BACKEND_DIR)/.venv
@@ -303,3 +305,8 @@ clean-all: clean-ports clean ## Полная очистка (включая за
 	@rm -rf $(FRONTEND_DIR)/dist
 	@rm -rf $(FRONTEND_DIR)/.vite
 	@echo "$(GREEN)✅ Проект очищен$(NC)"
+
+# Shortcut
+# всё работает в одной команде если стоит node 20 и python3.12
+i: install preview-full
+p: dev
